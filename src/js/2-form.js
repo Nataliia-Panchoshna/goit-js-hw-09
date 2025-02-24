@@ -1,21 +1,11 @@
 const form = document.querySelector('form');
 const STORAGE_KEY = 'feedback-form-state';
 
-const emailInput = form.elements.email;
+const formData = { email: '', message: '' };
 
-emailInput.addEventListener("focus", () => {
-    emailInput.placeholder = "Type area";
-});
-
-emailInput.addEventListener("blur", () => {
-    emailInput.placeholder = "";
-});
-    
 const saveFormState = () => { 
-    const formData = {
-        email: form.elements.email.value.trim(),
-        message: form.elements.message.value.trim(),
-    };
+    formData.email = form.elements.email.value.trim();
+    formData.message = form.elements.message.value.trim();
     localStorage.setItem(STORAGE_KEY, JSON.stringify(formData));
 };
 
@@ -23,31 +13,34 @@ const loadFormState = () => {
     try { 
         const saveData = localStorage.getItem(STORAGE_KEY);
         if (saveData) {
-            const { email, message } = JSON.parse(saveData);
-            form.elements.email.value = email ?? '';
-            form.elements.message.value = message ?? '';
+            Object.assign(formData, JSON.parse(saveData));
+            form.elements.email.value = formData.email;
+            form.elements.message.value = formData.message;
         }
+    } catch (error) { 
+        console.log('Спіймав помилку: ', error); 
     }
-    catch (error) { console.log('Спіймав помилку: ', error); };
 };
 
-form.addEventListener('input', saveFormState);
-form.addEventListener('submit', e => { 
+form.addEventListener('input', (event) => {
+    formData[event.target.name] = event.target.value.trim();
+    saveFormState();
+});
+
+form.addEventListener('submit', (e) => { 
     e.preventDefault();
 
-    const email = form.elements.email.value.trim();
-    const message = form.elements.message.value.trim();
-
-    if (!email || !message) {
+    if (!formData.email || !formData.message) {
         alert('Please fill in both fields!');
         return;
     }
 
-    console.log({ email, message });
+    console.log(formData);
 
     localStorage.removeItem(STORAGE_KEY);
     form.reset();
+    formData.email = '';
+    formData.message = '';
 });
-
 
 loadFormState();
